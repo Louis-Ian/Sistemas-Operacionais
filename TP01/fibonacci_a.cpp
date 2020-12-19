@@ -24,26 +24,28 @@ long long int* fibonacci_generic(int startig_value, int next_value, int counter)
 	return list_r;
 } 
 
-int main() {
+int main(int argc, char *argv[ ]) {
 
-	int ini = 0, end = 1, fib_ini, fib_end;
+	int ini = atoi(argv[0]);
+	int end = atoi(argv[1]);
 
 	cout << "Este programa imprime parte da sequencia de fibonacci:\n do i-esimo ate o n-esimo numero\n";
-	cout << "i: ";
+	
+	// cout << "i: ";
+	// Entrada interativa
+	// cin >> ini;
+	// while(ini < 1){
+	// 	cout << "i deve ser maior ou igual a 1.\n";
+	// 	cin >> ini;
+	// }
 
-	cin >> ini;
-	while(ini < 1){
-		cout << "i deve ser maior ou igual a 1.\n";
-		cin >> ini;
-	}
-
-	cout << "n: ";
-
-	cin >> end;
-	while(end < ini){
-		cout << "n deve ser maior ou igual a i.\n";
-		cin >> end;
-	}
+	// cout << "n: ";
+	// Entrada interativa
+	// cin >> end;
+	// while(end < ini){
+	// 	cout << "n deve ser maior ou igual a i.\n";
+	// 	cin >> end;
+	// }
 
 	long long int* list = fibonacci_generic(fibonacci_formula(ini), 
 						fibonacci_formula(ini+1), end-ini+1);
