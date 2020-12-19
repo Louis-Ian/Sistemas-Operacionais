@@ -70,7 +70,8 @@ int main() {
 			fibs += " ";
 		}
 
-		for (;;){}
+		// Keeps child process running when visualizing running processes
+		//for (;;){}
 
 		cout << "fibonaccis de " << ini << " ate " << end << ":\n"; 
 
