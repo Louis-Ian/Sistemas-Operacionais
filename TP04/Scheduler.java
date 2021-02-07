@@ -9,14 +9,23 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public final class Scheduler{
+    // Global simulated cpu clock
+    private static int clock = 0;
+
     // List of processes
     private static ArrayList<int[]> procList = new ArrayList<>();
-    private static ArrayList<int[]> finalProcList = new ArrayList<>();
+    private static ArrayList<int[]> waitingQueue = new ArrayList<>();
+    private static int[] executingProcess = {0, 0, 0, 0};
+    private static int remainingTime = executingProcess[2]; // TODO: Is it the value or the reference?
 
     // Statistics
     private static int totalProcessingTime = 0;
     private static int totalRunningTime = 0;
-    private static float cpuUtilization = 100.0f;
+    private static float cpuUtilization = 0;
+    private static float averageThroughput = 0;
+    private static int finishedProcesses = 0;
+    private static ArrayList<int[]> turnaroundList = new ArrayList<>(); // Pair: pId, waiting time
+    private static float averageTurnaround = 0;
 
     public static void stackProcesses(String fileName) throws IOException{
         try{
@@ -34,27 +43,57 @@ public final class Scheduler{
                 procList.add(process.clone());
             }
 
+            procList.sort((o1, o2) -> (o1[0] - o2[0])); // Orders processes by arrival
             br.close();
         } catch(FileNotFoundException notf){
             System.out.println("File not found. Check the given path.");
         }
     }
 
-    public static void fcfs(){
-        int[] process = procList.get(0);
-        finalProcList.add(process.clone());
+    public static void bumpTurnaroundTimers(){
+        if(turnaroundList.size() > 0){
+            turnaroundList.sort((o1, o2) -> (o1[0] - o2[0])); // Reorders processes by ID, just in case a process with low ID has been added
 
-        for(int i = 1; i < procList.size(); i++){
-            int[] previousProcess = finalProcList.get(finalProcList.size() - 1);
-            process = procList.get(i);
-
-            if(process[0] < (previousProcess[0] + previousProcess[2])){
-                process[0] = previousProcess[0] + previousProcess[2];
+            for(int j = 0; j < waitingQueue.size(); j++) {
+                for (int i = 0; i < turnaroundList.size(); i++) {
+                    if (turnaroundList.get(i)[0] == waitingQueue.get(j)[1]) {  // If IDs match, bump timers
+                        turnaroundList.get(i)[1]++;
+                    }
+                }
             }
-            finalProcList.add(process.clone());
         }
     }
-    
+
+    public static void fcfs(){
+
+        while(remainingTime > 0 || waitingQueue.size() > 0 || procList.size() > 0){
+
+            while (procList.size() > 0 && procList.get(0)[0] == clock) {
+                waitingQueue.add(procList.get(0));
+                int[] pairAux = {procList.get(0)[1], 0};
+                turnaroundList.add(pairAux);
+                procList.remove(0);
+                finishedProcesses++;
+            }
+
+            if(remainingTime > 0) {
+                totalProcessingTime++;
+                remainingTime--;
+                bumpTurnaroundTimers();
+
+            } else if(waitingQueue.size() > 0){
+                executingProcess = waitingQueue.get(0);
+                waitingQueue.remove(0);
+                remainingTime = executingProcess[2] - 1;
+                totalProcessingTime++;
+                bumpTurnaroundTimers();
+            }
+
+            clock++;
+            totalRunningTime++;
+        }
+    }
+
     public static void sjf(){
         
     }
@@ -82,19 +121,26 @@ public final class Scheduler{
 
     // Generates statistics for the final process queue
     public static void generateStatistics(){
-        for(int i = 0; i < finalProcList.size(); i++){
-            totalProcessingTime += procList.get(i)[2];
-        }
 
-        totalRunningTime = finalProcList.get(finalProcList.size() - 1)[0] + finalProcList.get(finalProcList.size() - 1)[2];
-        cpuUtilization = (float)totalProcessingTime/(float)totalRunningTime;
-        cpuUtilization *= 100;
+        cpuUtilization = ((float)totalProcessingTime/(float)totalRunningTime)  * 100;
+        averageThroughput = (float)totalRunningTime/finishedProcesses;
+
+        int totalTurnaround = 0;
+        for(int i = 0; i < turnaroundList.size(); i++){ totalTurnaround += turnaroundList.get(i)[1];}
+
+        averageTurnaround = (float)totalTurnaround/(float)finishedProcesses;
     }
 
     public static void printStatistics(String algorithm, String parameter){
         printHeader(algorithm, parameter);
-        System.out.println("Total processing time: " + totalProcessingTime);
+        System.out.println("\nTotal processing time: " + totalProcessingTime);
         System.out.println("CPU Utilization: " + cpuUtilization + "%");
+        System.out.println("\nAverage throughput: " + averageThroughput + " clocks/process");
+        System.out.println("Average turnaround: " + averageTurnaround);
+        System.out.println("Average response time: *to be honest, i don't understand how to measure it in this assignment, given the csv file only has the burst time*");
+        System.out.println("Average waiting time: *same thing as the above.. should i emulate IO operations?*");
+        System.out.println("Average context switching: NA");
+        System.out.println("Total executed processes: " + finishedProcesses);
     }
     
     public static void main(String[] args) {
@@ -108,7 +154,7 @@ public final class Scheduler{
             try{
                 stackProcesses(args[0]);
             } catch(IOException iox){
-                System.out.println("Something wnet wrong while reading the processes file.");
+                System.out.println("Something went wrong while reading the processes file.");
             }
 
             switch (args[1]) {
@@ -119,6 +165,7 @@ public final class Scheduler{
                     break;
             
                 default:
+                    System.out.println("Could not recognize the requested algorithm."); // Todo: show help with available algorithms
                     break;
             }
         }
