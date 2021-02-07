@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public final class Scheduler{
     // Global simulated cpu clock
@@ -43,7 +44,7 @@ public final class Scheduler{
                 procList.add(process.clone());
             }
 
-            procList.sort((o1, o2) -> (o1[0] - o2[0])); // Orders processes by arrival
+            procList.sort(Comparator.comparingInt(o -> o[0])); // Orders processes by arrival
             br.close();
         } catch(FileNotFoundException notf){
             System.out.println("File not found. Check the given path.");
@@ -52,12 +53,12 @@ public final class Scheduler{
 
     public static void bumpTurnaroundTimers(){
         if(turnaroundList.size() > 0){
-            turnaroundList.sort((o1, o2) -> (o1[0] - o2[0])); // Reorders processes by ID, just in case a process with low ID has been added
+            turnaroundList.sort(Comparator.comparingInt(o -> o[0])); // Reorders processes by ID, just in case a process with low ID has been added
 
-            for(int j = 0; j < waitingQueue.size(); j++) {
-                for (int i = 0; i < turnaroundList.size(); i++) {
-                    if (turnaroundList.get(i)[0] == waitingQueue.get(j)[1]) {  // If IDs match, bump timers
-                        turnaroundList.get(i)[1]++;
+            for (int[] ints : waitingQueue) {
+                for (int[] value : turnaroundList) {
+                    if (value[0] == ints[1]) {  // If IDs match, bump timers
+                        value[1]++;
                     }
                 }
             }
@@ -126,7 +127,9 @@ public final class Scheduler{
         averageThroughput = (float)totalRunningTime/finishedProcesses;
 
         int totalTurnaround = 0;
-        for(int i = 0; i < turnaroundList.size(); i++){ totalTurnaround += turnaroundList.get(i)[1];}
+        for (int[] ints : turnaroundList) {
+            totalTurnaround += ints[1];
+        }
 
         averageTurnaround = (float)totalTurnaround/(float)finishedProcesses;
     }
