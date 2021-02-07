@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public final class Escalonador{
+public final class Scheduler{
     private static ArrayList<String[]> pList = new ArrayList<>();
 
     public static void stackProcesses(String fileName) throws IOException{
@@ -57,8 +57,8 @@ public final class Escalonador{
     
     public static void main(String[] args) {
         if(args.length < 2){
-            System.out.println("O programa não recebeu argumentos suficientes para executar.");
-            System.out.println("Para executar, use: java Escalonador <nome do arquivo de processos> <algoritmo de escalonamento> [<quantum>=<valor>]\n");
+            System.out.println("Not enough parameters.");
+            System.out.println("To execute, type: java Scheduler <path to processes file> <scheduling algorithm> [<quantum>=<value>]\n");
         } else {
             try{
                 stackProcesses(args[0]);
