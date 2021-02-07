@@ -17,7 +17,7 @@ public final class Scheduler{
     private static ArrayList<int[]> procList = new ArrayList<>();
     private static ArrayList<int[]> waitingQueue = new ArrayList<>();
     private static int[] executingProcess = {0, 0, 0, 0};
-    private static int remainingTime = executingProcess[2]; // TODO: Is it the value or the reference?
+    private static int remainingTime = executingProcess[2];
 
     // Statistics
     private static int totalProcessingTime = 0;
@@ -43,8 +43,6 @@ public final class Scheduler{
                 }
                 procList.add(process.clone());
             }
-
-            procList.sort(Comparator.comparingInt(o -> o[0])); // Orders processes by arrival
             br.close();
         } catch(FileNotFoundException notf){
             System.out.println("File not found. Check the given path.");
@@ -66,6 +64,8 @@ public final class Scheduler{
     }
 
     public static void fcfs(){
+
+        procList.sort(Comparator.comparingInt(o -> o[0])); // Orders processes by arrival
 
         while(remainingTime > 0 || waitingQueue.size() > 0 || procList.size() > 0){
 
@@ -96,7 +96,36 @@ public final class Scheduler{
     }
 
     public static void sjf(){
-        
+
+        procList.sort(Comparator.comparingInt(o -> o[0])); // Orders processes by arrival
+
+        while(remainingTime > 0 || waitingQueue.size() > 0 || procList.size() > 0){
+
+            while (procList.size() > 0 && procList.get(0)[0] == clock) {
+                waitingQueue.add(procList.get(0));
+                waitingQueue.sort(Comparator.comparingInt(o -> o[2])); // Orders processes by remaining-time
+                int[] pairAux = {procList.get(0)[1], 0};
+                turnaroundList.add(pairAux);
+                procList.remove(0);
+                finishedProcesses++;
+            }
+
+            if(remainingTime > 0) {
+                totalProcessingTime++;
+                remainingTime--;
+                bumpTurnaroundTimers();
+
+            } else if(waitingQueue.size() > 0){
+                executingProcess = waitingQueue.get(0);
+                waitingQueue.remove(0);
+                remainingTime = executingProcess[2] - 1;
+                totalProcessingTime++;
+                bumpTurnaroundTimers();
+            }
+
+            clock++;
+            totalRunningTime++;
+        }
     }
     
     public static void sjfP(){
@@ -166,7 +195,11 @@ public final class Scheduler{
                     generateStatistics();
                     printStatistics("First-Come,First-Served", "none");
                     break;
-            
+                case "SJF":
+                    sjf();
+                    generateStatistics();
+                    printStatistics("Shortest Job First", "none");
+                    break;
                 default:
                     System.out.println("Could not recognize the requested algorithm."); // Todo: show help with available algorithms
                     break;
