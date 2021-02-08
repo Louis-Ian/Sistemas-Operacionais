@@ -1,3 +1,7 @@
+// Credits
+// Student: Louis Ian Silva dos Santos - 402525
+// CSV generator: https://www.mockaroo.com
+
 package TP04;
 
 import java.io.BufferedReader;
@@ -35,7 +39,8 @@ public final class Scheduler{
             String line;
             String[] lineSplit;
             int[] process = {0, 0, 0, 0};
-            
+
+            br.readLine(); // Just get rid of the CSV header
             while((line = br.readLine()) != null){
                 lineSplit = line.split(", ");
                 for(int i = 0; i < 4; i++){
