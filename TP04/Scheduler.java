@@ -129,11 +129,72 @@ public final class Scheduler{
     }
     
     public static void sjfP(){
-        
+
+        procList.sort(Comparator.comparingInt(o -> o[0])); // Orders processes by arrival
+
+        while(remainingTime > 0 || waitingQueue.size() > 0 || procList.size() > 0){
+
+            while (procList.size() > 0 && procList.get(0)[0] == clock) {
+                waitingQueue.add(procList.get(0));
+                waitingQueue.sort(Comparator.comparingInt(o -> o[2])); // Orders processes by remaining-time
+                int[] pairAux = {procList.get(0)[1], 0};
+                turnaroundList.add(pairAux);
+                procList.remove(0);
+                finishedProcesses++;
+            }
+
+            if(remainingTime > 0) {
+                totalProcessingTime++;
+
+                if(waitingQueue.get(0)[2] < remainingTime){
+                    executingProcess[2] = remainingTime;
+                    waitingQueue.add(executingProcess);
+                    waitingQueue.sort(Comparator.comparingInt(o -> o[3])); // Orders processes by priority
+                    executingProcess = waitingQueue.get(0);
+                    remainingTime = executingProcess[2] - 1;
+                } else {
+                    remainingTime--;
+                }
+
+                bumpTurnaroundTimers();
+            }
+
+            clock++;
+            totalRunningTime++;
+        }
     }
     
     public static void priority(){
-        
+
+        procList.sort(Comparator.comparingInt(o -> o[0])); // Orders processes by arrival
+
+        while(remainingTime > 0 || waitingQueue.size() > 0 || procList.size() > 0){
+
+            while (procList.size() > 0 && procList.get(0)[0] == clock) {
+                waitingQueue.add(procList.get(0));
+                waitingQueue.sort((o1, o2) -> o2[3] - o1[3]); // Reorders processes by priority
+                int[] pairAux = {procList.get(0)[1], 0};
+                turnaroundList.add(pairAux);
+                procList.remove(0);
+                finishedProcesses++;
+            }
+
+            if(remainingTime > 0) {
+                totalProcessingTime++;
+                remainingTime--;
+                bumpTurnaroundTimers();
+
+            } else if(waitingQueue.size() > 0){
+                executingProcess = waitingQueue.get(0);
+                waitingQueue.remove(0);
+                remainingTime = executingProcess[2] - 1;
+                totalProcessingTime++;
+                bumpTurnaroundTimers();
+            }
+
+            clock++;
+            totalRunningTime++;
+        }
     }
     
     public static void priorityP(){
@@ -200,8 +261,30 @@ public final class Scheduler{
                     generateStatistics();
                     printStatistics("Shortest Job First", "none");
                     break;
+                case "SJFP":
+                    sjfP();
+                    generateStatistics();
+                    printStatistics("Shortest Job First - Preemptive", "none");
+                    break;
+                case "PRIORITY":
+                    priority();
+                    generateStatistics();
+                    printStatistics("Highest priority first", "none");
+                    break;
+                case "PRIORITYP":
+                    priorityP();
+                    generateStatistics();
+                    printStatistics("Highest priority first - Preemptive", "none");
+                    break;
+                case "RR":
+                    rr(Integer.parseInt(args[1]));
+                    generateStatistics();
+                    String q = args[2].split("=")[1];
+                    printStatistics("Round-Robin", "quantum: " + q);
+                    break;
                 default:
-                    System.out.println("Could not recognize the requested algorithm."); // Todo: show help with available algorithms
+                    System.out.println("Could not recognize the requested algorithm.\nPresent algorithms:\n");
+                    System.out.println("FCFS\nSJF\nSJFP\nPRIORITY\nPRIORITYP\nRR quantum=<value>");
                     break;
             }
         }
