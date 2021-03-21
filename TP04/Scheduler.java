@@ -203,7 +203,41 @@ public final class Scheduler{
     }
     
     public static void priorityP(){
-        
+        procList.sort(Comparator.comparingInt(o -> o[0])); // Orders processes by arrival
+
+        while(remainingTime > 0 || waitingQueue.size() > 0 || procList.size() > 0){
+
+            while (procList.size() > 0 && procList.get(0)[0] == clock) {
+                if(procList.get(0)[3] > executingProcess[3] && executingProcess[1] != 0){
+                    executingProcess[2] = remainingTime;
+                    waitingQueue.add(executingProcess);
+                    executingProcess = procList.get(0);
+                } else {
+                    waitingQueue.add(procList.get(0));
+                }
+
+                waitingQueue.sort((o1, o2) -> o2[3] - o1[3]); // Reorders processes by priority
+                int[] pairAux = {procList.get(0)[1], 0};
+                turnaroundList.add(pairAux);
+                procList.remove(0);
+                finishedProcesses++;
+            }
+
+            if(remainingTime > 0) {
+                totalProcessingTime++;
+                remainingTime--;
+                bumpTurnaroundTimers();
+            } else if(waitingQueue.size() > 0){
+                executingProcess = waitingQueue.get(0);
+                waitingQueue.remove(0);
+                remainingTime = executingProcess[2] - 1;
+                totalProcessingTime++;
+                bumpTurnaroundTimers();
+             }
+
+            clock++;
+            totalRunningTime++;
+        }
     }
     
     public static void rr(int quantum){
