@@ -12,6 +12,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 
 public final class Scheduler{
     // Global simulated cpu clock
@@ -241,7 +242,69 @@ public final class Scheduler{
     }
     
     public static void rr(int quantum){
-        
+        procList.sort(Comparator.comparingInt(o -> o[0])); // Orders processes by arrival
+
+        Iterator<int[]> iter = waitingQueue.iterator();
+        System.out.println(iter.hasNext());
+
+        waitingQueue.add(procList.get(0));
+        int[] pairAux = {procList.get(0)[1], 0};
+        turnaroundList.add(pairAux);
+        procList.remove(0);
+        finishedProcesses++;
+        waitingQueue.add(procList.get(0));
+        pairAux = new int[]{procList.get(0)[1], 0};
+        turnaroundList.add(pairAux);
+        procList.remove(0);
+        finishedProcesses++;
+
+        System.out.println(iter.hasNext());
+        executingProcess = iter.next();
+        System.out.println(executingProcess);
+        /*while(remainingTime > 0 || waitingQueue.size() > 0 || procList.size() > 0){
+
+            while (procList.size() > 0 && procList.get(0)[0] == clock) {
+                waitingQueue.add(procList.get(0));
+                int[] pairAux = {procList.get(0)[1], 0};
+                turnaroundList.add(pairAux);
+                procList.remove(0);
+                finishedProcesses++;
+            }
+
+            if(remainingTime > 0) {
+                totalProcessingTime++;
+                remainingTime--;
+                bumpTurnaroundTimers();
+
+            } else if(waitingQueue.size() > 0){
+                executingProcess = waitingQueue.get(0);
+                waitingQueue.remove(0);
+                remainingTime = executingProcess[2] - 1;
+                totalProcessingTime++;
+                bumpTurnaroundTimers();
+            }
+
+            clock++;
+            totalRunningTime++;
+        }
+
+        while (procList.size() > 0 && procList.get(0)[0] == clock) {
+            waitingQueue.add(procList.get(0));
+            int[] pairAux = {procList.get(0)[1], 0};
+            turnaroundList.add(pairAux);
+            procList.remove(0);
+//            finishedProcesses++;
+        }
+
+        while(waitingQueue.size() > 0 || procList.size() > 0) {
+            executingProcess =
+            while (remaining quantum time > 0 and remaing process work >0){
+                subtract 1 from process work
+                add to statiscs;
+            }
+
+            switch to next process;
+        }*/
     }
 
     public static void printHeader(String algorithm, String parameter){
@@ -316,9 +379,9 @@ public final class Scheduler{
                     printStatistics("Highest priority first - Preemptive", "none");
                     break;
                 case "RR":
-                    rr(Integer.parseInt(args[1]));
-                    generateStatistics();
                     String q = args[2].split("=")[1];
+                    rr(Integer.parseInt(q));
+                    generateStatistics();
                     printStatistics("Round-Robin", "quantum: " + q);
                     break;
                 default:
